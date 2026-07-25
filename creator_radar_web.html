@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>創作者雷達 Creator Radar</title>
+<style>
+  :root{
+    --bg:#14100c;           /* 深夜棕黑 */
+    --panel:#1e1813;        /* 面板 */
+    --panel-2:#26201a;
+    --line:#3a2f24;
+    --amber:#d4a24e;        /* 威士忌琥珀 */
+    --amber-soft:#e8c98a;
+    --green:#6fae7a;        /* 通過 */
+    --red:#c66b5a;          /* 淘汰 */
+    --text:#f0e9df;
+    --muted:#9c8f7d;
+    --shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Microsoft JhengHei","Segoe UI",-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 80% -10%, rgba(212,162,78,.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    line-height:1.6;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1120px;margin:0 auto}
+
+  /* ── Header ── */
+  header{margin-bottom:28px}
+  .kicker{
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--amber);font-weight:700;margin-bottom:8px
+  }
+  h1{
+    font-size:34px;font-weight:800;letter-spacing:.02em;
+    background:linear-gradient(180deg,var(--amber-soft),var(--amber));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    display:inline-block
+  }
+  .sub{color:var(--muted);font-size:15px;margin-top:6px;max-width:640px}
+
+  /* ── Cards / panels ── */
+  .panel{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:22px;box-shadow:var(--shadow)
+  }
+  .grid{display:grid;gap:20px}
+  @media(min-width:860px){.top-grid{grid-template-columns:1.3fr 1fr}}
+
+  /* ── Dropzone ── */
+  .drop{
+    border:2px dashed var(--line);border-radius:12px;
+    padding:34px 20px;text-align:center;cursor:pointer;
+    transition:.18s;background:var(--panel-2)
+  }
+  .drop:hover,.drop.hot{border-color:var(--amber);background:#2c241c}
+  .drop .icon{font-size:34px;margin-bottom:8px}
+  .drop b{color:var(--amber-soft)}
+  .drop small{display:block;color:var(--muted);margin-top:8px;font-size:12.5px}
+  .linkish{color:var(--amber);text-decoration:underline;cursor:pointer;background:none;border:none;font:inherit;padding:0}
+
+  /* ── Controls ── */
+  .ctrl-title{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:14px;text-transform:uppercase}
+  .field{margin-bottom:15px}
+  .field label{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;color:var(--text)}
+  .field label span{color:var(--amber-soft);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--amber);height:4px}
+  .brand-box{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text);border-radius:9px;padding:10px 12px;font:inherit;font-size:13px;
+    resize:vertical;min-height:70px
+  }
+  .brand-box:focus{outline:none;border-color:var(--amber)}
+
+  .btn{
+    width:100%;margin-top:6px;padding:13px;border:none;border-radius:10px;
+    background:linear-gradient(180deg,var(--amber-soft),var(--amber));
+    color:#2a1d0a;font-weight:800;font-size:15px;letter-spacing:.03em;cursor:pointer;
+    transition:.15s;font-family:inherit
+  }
+  .btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);margin-top:10px}
+  .btn.ghost:hover{border-color:var(--amber);background:var(--panel-2)}
+
+  /* ── Stats ── */
+  .stats{display:flex;gap:14px;margin:24px 0 14px;flex-wrap:wrap}
+  .stat{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .stat .n{font-size:28px;font-weight:800;color:var(--amber-soft)}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  /* ── Table ── */
+  .table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead th{
+    background:var(--panel-2);text-align:left;padding:13px 14px;
+    font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.04em;
+    cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--line)
+  }
+  thead th:hover{color:var(--amber-soft)}
+  thead th .arr{opacity:.4;font-size:10px}
+  tbody td{padding:12px 14px;border-bottom:1px solid rgba(58,47,36,.5);vertical-align:middle}
+  tbody tr:hover{background:var(--panel-2)}
+  tbody tr:last-child td{border-bottom:none}
+  .rank{font-weight:800;color:var(--amber);font-size:15px}
+  .uname{font-weight:700}
+  .uname a{color:var(--text);text-decoration:none}
+  .uname a:hover{color:var(--amber-soft);text-decoration:underline}
+  .tags{color:var(--muted);font-size:12.5px}
+  .pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line);border-radius:20px;padding:1px 9px;margin:1px 3px 1px 0;font-size:11.5px;color:var(--amber-soft)}
+
+  /* fit bar */
+  .fit{display:flex;align-items:center;gap:9px;min-width:130px}
+  .bar{flex:1;height:7px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--amber),var(--amber-soft))}
+  .fit b{font-size:13px;color:var(--amber-soft);min-width:26px;text-align:right}
+
+  .method{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700}
+  .method.ai{background:rgba(111,174,122,.16);color:var(--green)}
+  .method.kw{background:rgba(156,143,125,.16);color:var(--muted)}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+  .empty .icon{font-size:44px;margin-bottom:10px;opacity:.5}
+
+  .foot{margin-top:26px;font-size:12px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);padding-top:16px}
+  .foot b{color:var(--amber-soft)}
+  .hidden{display:none}
+
+  /* toggle */
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:13.5px}
+  .switch{position:relative;width:42px;height:23px;flex-shrink:0}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:var(--panel-2);border:1px solid var(--line);border-radius:20px;cursor:pointer;transition:.2s}
+  .slider:before{content:"";position:absolute;height:15px;width:15px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.2s}
+  .switch input:checked+.slider{background:rgba(212,162,78,.25);border-color:var(--amber)}
+  .switch input:checked+.slider:before{transform:translateX(19px);background:var(--amber)}
+  .key-field{margin-bottom:15px}
+  .key-field input{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 12px;font:inherit;font-size:13px}
+  .key-field input:focus{outline:none;border-color:var(--amber)}
+  .note{font-size:11.5px;color:var(--muted);margin-top:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Creator Radar ‧ 網紅選角雷達</div>
+    <h1>創作者雷達</h1>
+    <p class="sub">把模糊的選角需求，拆解成可量化的篩選層，再用 AI 判斷帳號與品牌調性的契合度，自動產出排序好的合作名單。</p>
+  </header>
+
+  <div class="grid top-grid">
+    <!-- 左：上傳 -->
+    <div class="panel">
+      <div class="ctrl-title">① 匯入候選名單</div>
+      <div class="drop" id="drop">
+        <div class="icon">📥</div>
+        <div>把 <b>CSV 檔</b>拖進來，或<button class="linkish" id="pick">點此選擇檔案</button></div>
+        <small>需含欄位：username, followers（建議再加 avg_likes, avg_comments, days_since_last_post, bio, recent_captions, profile_url）</small>
+        <input type="file" id="file" accept=".csv" class="hidden">
+      </div>
+      <button class="btn ghost" id="loadSample">先用範例資料試跑</button>
+      <div id="fileInfo" class="note hidden"></div>
+    </div>
+
+    <!-- 右：條件 -->
+    <div class="panel">
+      <div class="ctrl-title">② 設定篩選條件</div>
+      <div class="field">
+        <label>粉絲數下限 <span id="v_minF">5,000</span></label>
+        <input type="range" id="minF" min="0" max="100000" step="1000" value="5000">
+      </div>
+      <div class="field">
+        <label>粉絲數上限 <span id="v_maxF">500,000</span></label>
+        <input type="range" id="maxF" min="50000" max="2000000" step="50000" value="500000">
+      </div>
+      <div class="field">
+        <label>互動率下限 <span id="v_er">1.5%</span></label>
+        <input type="range" id="er" min="0" max="10" step="0.5" value="1.5">
+      </div>
+      <div class="field">
+        <label>活躍門檻（近幾天內有貼文）<span id="v_days">45 天</span></label>
+        <input type="range" id="days" min="7" max="180" step="1" value="45">
+      </div>
+    </div>
+  </div>
+
+  <!-- 品牌調性 + AI -->
+  <div class="panel" style="margin-top:20px">
+    <div class="ctrl-title">③ 品牌調性描述（AI 依此判斷契合度）</div>
+    <textarea class="brand-box" id="brand">潮流、夜生活、酒吧調酒、有梗幽默、吃喝玩樂、派對社交、生活風格。目標客群為 25-40 歲、對威士忌／琴酒／利口酒等烈酒品牌有興趣的族群。偏好本人風格突出、留言有梗、會玩會鬧的創作者。</textarea>
+
+    <div class="toggle-row" style="margin-top:16px">
+      <label class="switch"><input type="checkbox" id="useAI"><span class="slider"></span></label>
+      <span>啟用 AI 調性判斷（需 Claude API key）。關閉則使用關鍵字評分，免金鑰。</span>
+    </div>
+    <div class="key-field hidden" id="keyWrap">
+      <input type="password" id="apiKey" placeholder="貼上 Claude API key（sk-ant-...）">
+      <div class="note">金鑰只留在你的瀏覽器記憶體，不會上傳、不會存檔。關掉分頁即消失。</div>
+    </div>
+
+    <button class="btn" id="run" disabled>🔍 執行篩選</button>
+  </div>
+
+  <!-- 結果 -->
+  <div id="results" class="hidden">
+    <div class="stats">
+      <div class="stat"><div class="n" id="s_in">0</div><div class="l">匯入帳號</div></div>
+      <div class="stat"><div class="n" id="s_pass">0</div><div class="l">通過篩選</div></div>
+      <div class="stat"><div class="n" id="s_out">0</div><div class="l">淘汰</div></div>
+      <div class="stat"><div class="n" id="s_top">0</div><div class="l">推薦名單</div></div>
+    </div>
+    <button class="btn ghost" id="dl" style="max-width:220px;margin-bottom:16px">⬇ 下載名單 CSV</button>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th data-k="rank">#</th>
+          <th data-k="username">帳號</th>
+          <th data-k="followers">粉絲數 <span class="arr">▼</span></th>
+          <th data-k="er">互動率 <span class="arr">▼</span></th>
+          <th data-k="fit">品牌契合度 <span class="arr">▼</span></th>
+          <th data-k="tags">風格標籤</th>
+          <th data-k="method">判斷</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="foot">
+      <b>資料界線：</b>本工具不爬取 IG／Threads。Meta 禁止未授權爬取，帳號與法律風險由執行者自負。候選資料請透過合法管道取得（官方授權的第三方 creator discovery API，或手動整理）。本工具負責的是「取得資料之後」的篩選與判斷自動化。<br>
+      <b>綜合分</b> = 品牌契合 70% + 互動率 30%，由高到低排序。
+    </div>
+  </div>
+
+  <div id="emptyState" class="table-wrap" style="margin-top:24px">
+    <div class="empty"><div class="icon">🥃</div>匯入名單、設好條件後，按「執行篩選」，這裡會列出排序好的推薦創作者。</div>
+  </div>
+</div>
+
+<script>
+// ────────────── 狀態 ──────────────
+let rawRows = [];        // 匯入的原始資料
+let resultRows = [];     // 篩選+評分後
+let sortKey = 'total', sortDir = -1;
+
+const $ = id => document.getElementById(id);
+
+// ────────────── 範例資料（與 Python 版一致） ──────────────
+const SAMPLE = `username,followers,avg_likes,avg_comments,days_since_last_post,bio,recent_captions,profile_url
+bar_tender_kai,42000,3100,180,5,台北調酒師｜週末在酒吧搞事｜威士忌控,昨晚調了一杯超派的煙燻威士忌sour 有夠讚 來喝啦,https://instagram.com/bar_tender_kai
+foodie_mia,88000,4200,260,12,吃喝玩樂系｜美食探店｜夜生活愛好者,這家新開的居酒屋根本梗圖現場 笑死,https://instagram.com/foodie_mia
+zen_yoga_mom,15000,900,40,3,瑜珈老師｜親子育兒｜身心靈課程,早晨冥想帶孩子一起做瑜珈 分享課程資訊,https://instagram.com/zen_yoga_mom
+party_king_leo,120000,8900,700,2,派對咖｜DJ｜到處喝到處鬧｜有酒的地方就有我,上週末的派對太瘋 琴酒喝到天亮 下週續攤,https://instagram.com/party_king_leo
+tiny_acct,3200,210,15,8,小小創作者剛起步,今天天氣不錯,https://instagram.com/tiny_acct
+inactive_guy,55000,4000,300,120,曾經的潮流部落客,半年沒更新了,https://instagram.com/inactive_guy
+lowkey_reader,30000,120,8,4,閱讀分享｜安靜生活,這個月讀了三本書 推薦給大家,https://instagram.com/lowkey_reader
+cocktail_nina,67000,5100,420,6,cocktail lover｜bartender｜夜生活玩家｜超愛開玩笑,來看我用琴酒調的派對特調 保證有梗,https://instagram.com/cocktail_nina
+mega_star,2000000,90000,5000,1,百萬網紅｜什麼都接,業配私訊,https://instagram.com/mega_star
+travel_jay,49000,3600,210,20,旅遊美食｜潮流生活｜愛喝一杯,旅途中發現的隱藏酒吧 威士忌選擇超多,https://instagram.com/travel_jay`;
+
+// ────────────── CSV 解析（處理引號、逗號） ──────────────
+function parseCSV(text){
+  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='');
+  if(!lines.length) return [];
+  const parseLine = line=>{
+    const out=[]; let cur='', q=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; }
+      else if(c===','&&!q){ out.push(cur); cur=''; }
+      else cur+=c;
+    }
+    out.push(cur); return out;
+  };
+  const headers = parseLine(lines[0]).map(h=>h.trim());
+  return lines.slice(1).map(l=>{
+    const cells=parseLine(l); const o={};
+    headers.forEach((h,i)=>o[h]=(cells[i]??'').trim());
+    return o;
+  });
+}
+
+// ────────────── 安全數字 ──────────────
+const num = v=>{ if(v==null) return NaN; const s=String(v).replace(/[,%\s]/g,''); if(s==='')return NaN; const f=parseFloat(s); return isNaN(f)?NaN:f; };
+const intOr = (v,d=0)=>{ const f=num(v); return isNaN(f)?d:Math.round(f); };
+
+// ────────────── 互動率 ──────────────
+function engagement(r){
+  const direct=num(r.engagement_rate); if(!isNaN(direct)) return direct;
+  const f=num(r.followers), likes=num(r.avg_likes); let cmt=num(r.avg_comments);
+  if(isNaN(f)||f<=0||isNaN(likes)) return NaN;
+  if(isNaN(cmt)) cmt=0;
+  return Math.round((likes+cmt)/f*10000)/100;
+}
+
+// ────────────── 硬篩選 ──────────────
+function hardFilter(r,cfg){
+  const f=intOr(r.followers,0);
+  if(f<cfg.minF) return['粉絲數 '+f+' < '+cfg.minF];
+  if(f>cfg.maxF) return['粉絲數 '+f+' 過大'];
+  if(isNaN(r._er)) return['互動率資料不足'];
+  if(r._er<cfg.er) return['互動率 '+r._er+'% < '+cfg.er+'%'];
+  const d=intOr(r.days_since_last_post,999);
+  if(d>cfg.days) return['近 '+d+' 天無貼文'];
+  return null;
+}
+
+// ────────────── 關鍵字評分（無 API key 時） ──────────────
+const POS=['調酒','酒吧','威士忌','琴酒','夜生活','派對','梗','幽默','吃喝','玩樂','生活','潮','cocktail','party','nightlife','whisky','gin','美食','旅遊','dj'];
+const NEG=['親子','育兒','宗教','課程','團購','代購','醫療','保險','kids','教學','考試'];
+function heuristic(r){
+  const t=((r.bio||'')+' '+(r.recent_captions||'')).toLowerCase();
+  let pos=0,neg=0,tags=[];
+  POS.forEach(k=>{ if(t.includes(k.toLowerCase())){pos++; if(tags.length<4)tags.push(k);} });
+  NEG.forEach(k=>{ if(t.includes(k.toLowerCase()))neg++; });
+  const score=Math.max(0,Math.min(100,40+pos*15-neg*20));
+  return {score,tags,method:'kw'};
+}
+
+// ────────────── AI 評分（Claude API） ──────────────
+async function aiScore(r,brand,key){
+  const prompt=`你是烈酒品牌的網紅行銷選角助手。品牌調性：\n${brand}\n\n創作者公開資料：\n帳號：${r.username}\n簡介：${r.bio||''}\n近期貼文：${r.recent_captions||''}\n\n評估契合度，只回傳JSON不要其他文字：{"score":0到100整數,"tags":["最多4個風格標籤"]}`;
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:200,messages:[{role:'user',content:prompt}]})
+  });
+  if(!resp.ok) throw new Error('API '+resp.status);
+  const data=await resp.json();
+  let txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+  const p=JSON.parse(txt);
+  return {score:intOr(p.score,0),tags:(p.tags||[]).slice(0,4),method:'ai'};
+}
+
+// ────────────── 主流程 ──────────────
+async function runFilter(){
+  const cfg={
+    minF:+$('minF').value, maxF:+$('maxF').value,
+    er:+$('er').value, days:+$('days').value
+  };
+  const brand=$('brand').value.trim();
+  const useAI=$('useAI').checked;
+  const key=$('apiKey').value.trim();
+
+  if(useAI && !key){ alert('已啟用 AI 判斷，請先貼上 Claude API key，或關閉 AI 改用關鍵字評分。'); return; }
+
+  $('run').disabled=true; $('run').textContent='篩選中…';
+
+  const survivors=[]; let rejected=0;
+  for(const r of rawRows){
+    r._er=engagement(r);
+    const rej=hardFilter(r,cfg);
+    if(rej){ rejected++; continue; }
+    let fit;
+    try{
+      fit = (useAI&&key) ? await aiScore(r,brand,key) : heuristic(r);
+    }catch(e){
+      console.warn('AI 失敗，降級關鍵字：',r.username,e.message);
+      fit = heuristic(r);
+    }
+    const erScore=Math.min(r._er/10*100,100);
+    survivors.push({
+      username:r.username, followers:intOr(r.followers,0),
+      er:r._er, fit:fit.score, tags:fit.tags, method:fit.method,
+      url:r.profile_url||'', total:Math.round((fit.score*0.7+erScore*0.3)*10)/10
+    });
+  }
+  survivors.sort((a,b)=>b.total-a.total);
+  survivors.forEach((s,i)=>s.rank=i+1);
+  resultRows=survivors;
+
+  $('s_in').textContent=rawRows.length;
+  $('s_pass').textContent=survivors.length;
+  $('s_out').textContent=rejected;
+  $('s_top').textContent=survivors.length;
+  sortKey='total'; sortDir=-1;
+  render();
+  $('emptyState').classList.add('hidden');
+  $('results').classList.remove('hidden');
+  $('run').disabled=false; $('run').textContent='🔍 執行篩選';
+  $('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ────────────── 排序 + 渲染 ──────────────
+function render(){
+  const rows=[...resultRows].sort((a,b)=>{
+    let x=a[sortKey], y=b[sortKey];
+    if(typeof x==='string'){x=x||'';y=y||'';return sortDir*x.localeCompare(y);}
+    return sortDir*((x||0)-(y||0));
+  });
+  $('tbody').innerHTML=rows.map(r=>`
+    <tr>
+      <td class="rank">${r.rank}</td>
+      <td class="uname">${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${r.username}</a>`:r.username}</td>
+      <td>${r.followers.toLocaleString()}</td>
+      <td>${r.er}%</td>
+      <td><div class="fit"><div class="bar"><i style="width:${r.fit}%"></i></div><b>${r.fit}</b></div></td>
+      <td class="tags">${(r.tags&&r.tags.length)?r.tags.map(t=>`<span class="pill">${t}</span>`).join(''):'<span style="opacity:.4">—</span>'}</td>
+      <td><span class="method ${r.method}">${r.method==='ai'?'AI':'關鍵字'}</span></td>
+    </tr>`).join('');
+}
+
+// ────────────── 下載 CSV ──────────────
+function downloadCSV(){
+  const head=['rank','username','followers','engagement_rate','fit_score','total','tags','method','profile_url'];
+  const lines=[head.join(',')];
+  resultRows.forEach(r=>{
+    lines.push([r.rank,r.username,r.followers,r.er,r.fit,r.total,'"'+(r.tags||[]).join('、')+'"',r.method,r.url].join(','));
+  });
+  const blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='shortlist.csv'; a.click();
+}
+
+// ────────────── 資料載入 ──────────────
+function loadData(text,name){
+  rawRows=parseCSV(text);
+  if(!rawRows.length){ alert('讀不到資料，請確認 CSV 格式與欄位。'); return; }
+  $('fileInfo').textContent=`已載入「${name}」，共 ${rawRows.length} 筆候選帳號。`;
+  $('fileInfo').classList.remove('hidden');
+  $('run').disabled=false;
+}
+
+// ────────────── 事件綁定 ──────────────
+$('pick').onclick=()=>$('file').click();
+$('file').onchange=e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>loadData(rd.result,f.name); rd.readAsText(f,'utf-8'); };
+$('loadSample').onclick=()=>loadData(SAMPLE,'範例資料');
+
+const drop=$('drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('hot');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('hot');}));
+drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>loadData(rd.result,f.name); rd.readAsText(f,'utf-8'); });
+
+$('useAI').onchange=e=>$('keyWrap').classList.toggle('hidden',!e.target.checked);
+$('run').onclick=runFilter;
+$('dl').onclick=downloadCSV;
+
+// sliders
+const fmt=n=>(+n).toLocaleString();
+$('minF').oninput=e=>$('v_minF').textContent=fmt(e.target.value);
+$('maxF').oninput=e=>$('v_maxF').textContent=fmt(e.target.value);
+$('er').oninput=e=>$('v_er').textContent=e.target.value+'%';
+$('days').oninput=e=>$('v_days').textContent=e.target.value+' 天';
+
+// 表頭排序
+document.querySelectorAll('thead th').forEach(th=>{
+  th.onclick=()=>{ const k=th.dataset.k; if(k==='tags')return;
+    if(sortKey===k) sortDir*=-1; else {sortKey=k;sortDir=-1;}
+    render();
+  };
+});
+</script>
+</body>
+</html>
